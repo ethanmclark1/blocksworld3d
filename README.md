@@ -1,1 +1,1 @@
-# blocksworld-3d
+# blocksworld
