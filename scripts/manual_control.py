@@ -15,7 +15,7 @@ from miniworld.manual_control import ManualControl
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env-name", default="MiniWorld-Hallway-v0")
+    parser.add_argument("--env-name", default="MiniWorld-RoomObjects-v0")
     parser.add_argument(
         "--domain-rand", action="store_true", help="enable domain randomization"
     )

@@ -7,6 +7,7 @@ Miniworld is being maintained by the Farama Foundation (https://farama.org/proje
 [![Build Status](https://travis-ci.org/maximecb/gym-miniworld.svg?branch=master)](https://travis-ci.org/maximecb/gym-miniworld)
 
 Contents:
+
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -29,6 +30,7 @@ MiniWorld can be seen as a simpler alternative to VizDoom or DMLab. It is writte
 </p>
 
 Features:
+
 - Few dependencies, less likely to break, easy to install
 - Easy to create your own levels, or modify existing ones
 - Good performance, high frame rate, support for multiple processes
@@ -41,6 +43,7 @@ Features:
 - Ability to produce depth maps matching camera images (RGB-D)
 
 Limitations:
+
 - Graphics are basic, nowhere near photorealism
 - Physics are very basic, not sufficient for robot arms or manipulation
 
@@ -58,6 +61,7 @@ Please use this bibtex if you want to cite this repository in your publications:
 ```
 
 List of publications & submissions using MiniWorld (please open a pull request to add missing entries):
+
 - [Decoupling Exploration and Exploitation for Meta-Reinforcement Learning without Sacrifices](https://arxiv.org/abs/2008.02790) (Stanford University, ICML 2021)
 - [Rank the Episodes: A Simple Approach for Exploration in Procedurally-Generated Environments](https://openreview.net/forum?id=MtEE0CktZht) (Texas A&M University, Kuai Inc., ICLR 2021)
 - [DeepAveragers: Offline Reinforcement Learning by Solving Derived Non-Parametric MDPs](https://arxiv.org/abs/2010.08891) (NeurIPS Offline RL Workshop, Oct 2020)
@@ -72,6 +76,7 @@ This simulator was created as part of work done at [Mila](https://mila.quebec/).
 ## Installation
 
 Requirements:
+
 - Python 3.7+
 - Gymnasium
 - NumPy
