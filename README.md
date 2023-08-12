@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
     <img src="https://raw.githubusercontent.com/Farama-Foundation/Miniworld/master/miniworld-text.png" width="500px"/>
 </p>
@@ -143,3 +144,6 @@ To cite this project please use:
   year         = {2023},
 }
 ```
+=======
+# blocksworld
+>>>>>>> origin/main
