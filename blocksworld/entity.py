@@ -401,6 +401,9 @@ class Box(Entity):
 
         self.radius = math.sqrt(sx * sx + sz * sz) / 2
         self.height = sy
+        
+        self.is_above = None
+        self.is_beneath = None
 
     def randomize(self, params, rng):
         self.color_vec = COLORS[self.color] + params.sample(rng, "obj_color_bias")

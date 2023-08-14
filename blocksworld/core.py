@@ -698,13 +698,30 @@ class BlocksWorldEnv(gym.Env):
             ent = self.intersect(self.agent, test_pos, 1.2 * self.agent.radius)
             if not self.agent.carrying:
                 if isinstance(ent, Entity):
-                    if not ent.is_static:
+                    if not ent.is_static and ent.is_beneath is None:
                         self.agent.carrying = ent
+                        if ent.is_above:
+                            bottom_block = ent.is_above
+                            bottom_block.is_beneath = None
+                            ent.is_above = None
 
-        # Drop an object being carried
         elif action == self.actions.drop:
             if self.agent.carrying:
-                self.agent.carrying.pos[1] = 0
+                threshold = 1.5
+                current_block = self.agent.carrying
+                new_pos = current_block.pos.copy()
+                new_pos[1] = 0.0
+                for other_block in self.blocks:
+                    if other_block != current_block:
+                        dist = np.linalg.norm(other_block.pos - current_block.pos)
+                        if dist < threshold:
+                            new_pos = np.array(other_block.pos)
+                            new_pos[1] = other_block.height
+                            other_block.is_beneath = current_block
+                            current_block.is_above = other_block
+                            break
+                        
+                self.agent.carrying.pos = new_pos
                 self.agent.carrying = None
 
         # If we are carrying an object, update its position as we move
@@ -911,6 +928,7 @@ class BlocksWorldEnv(gym.Env):
     def place_agent(
         self,
         room=None,
+        cam_height=None,
         pos=None,
         dir=None,
         min_x=None,
@@ -922,7 +940,10 @@ class BlocksWorldEnv(gym.Env):
         Place the agent in the environment at a random position
         and orientation
         """
-
+        
+        if cam_height is not None:
+            self.agent.cam_height = cam_height
+        
         return self.place_entity(
             self.agent,
             room=room,
@@ -1217,6 +1238,7 @@ class BlocksWorldEnv(gym.Env):
             1.0,
             0.0,
         )
+        
 
         return self._render_world(frame_buffer, render_agent=False)
 

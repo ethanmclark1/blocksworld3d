@@ -6,7 +6,7 @@ from blocksworld.core import BlocksWorldEnv
 
 
 class RoomObjects(BlocksWorldEnv, utils.EzPickle):
-    def __init__(self, size=10, **kwargs):
+    def __init__(self, size=12, **kwargs):
         assert size >= 2
         self.size = size
 
@@ -24,16 +24,30 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
             no_ceiling=False,
         )
 
-        # Reduce chances that objects are too close to see
         self.agent.radius = 1.5
-        self.place_agent(pos=(5,0,5), dir=0)
+        self.place_agent(cam_height=0, pos=(5,0,7), dir=0)
         
-        self.place_entity(Box(color='yellow', size=0.4), pos=(8,0,4), dir=0)
-        self.place_entity(Box(color='blue', size=0.4), pos=(8,0,4.5), dir=0)
-        self.place_entity(Box(color='green', size=0.4), pos=(8,0,5), dir=0)
-        self.place_entity(Box(color='purple', size=0.4), pos=(8,0,5.5), dir=0)
-        self.place_entity(Box(color='red', size=0.4), pos=(8,0,6), dir=0)
+        # TODO: Disable picking up blocks that have a block on top of them, get the topmost block instead
+        # TODO: Place blocks on the topmost block instead of on the ground
+        # TODO: Enable turning in every direction when block is in hand (except into a wall)
+        # TODO: Figure out correct for threshold distance for drop action
+        # TODO: Fix turn action 
+        # TODO: Fix move action
+        
+        self.place_entity(Box(color='yellow', size=0.8), pos=(8.5,0,3), dir=0)
+        self.place_entity(Box(color='blue', size=0.8), pos=(8.5,0,4), dir=0)
+        self.place_entity(Box(color='green', size=0.8), pos=(8.5,0,5), dir=0)
+        self.place_entity(Box(color='purple', size=0.8), pos=(8.5,0,6), dir=0)
+        self.place_entity(Box(color='red', size=0.8), pos=(8.5,0,7), dir=0)
+        
+        self.blocks = [entity for entity in self.entities if isinstance(entity, Box)]
 
     def step(self, action):
         obs, reward, termination, truncation, info = super().step(action)
+        
+        # if not self.agent.carrying:
+        #     if self.near(self.red_box, self.yellow_box):
+        #         reward += self._reward()
+        #         termination = True
+                
         return obs, reward, termination, truncation, info
