@@ -6,8 +6,7 @@ from blocksworld.core import BlocksWorldEnv
 
 
 class RoomObjects(BlocksWorldEnv, utils.EzPickle):
-    def __init__(self, size=12, **kwargs):
-        assert size >= 2
+    def __init__(self, size=6, **kwargs):
         self.size = size
 
         BlocksWorldEnv.__init__(self, max_episode_steps=math.inf, **kwargs)
@@ -24,21 +23,17 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
             no_ceiling=False,
         )
 
-        self.agent.radius = 1.5
-        self.place_agent(cam_height=0, pos=(5,0,7), dir=0)
+        self.agent.radius = 1
+        self.place_agent(cam_height=0, pos=(1,0,3), dir=0)
         
-        # TODO: Disable picking up blocks that have a block on top of them, get the topmost block instead
-        # TODO: Place blocks on the topmost block instead of on the ground
-        # TODO: Enable turning in every direction when block is in hand (except into a wall)
-        # TODO: Figure out correct for threshold distance for drop action
-        # TODO: Fix turn action 
-        # TODO: Fix move action
+        # TODO: Fix placing block in the crosshairs
+        # TODO: Fix picking up a block in the crosshairs
         
-        self.place_entity(Box(color='yellow', size=0.8), pos=(8.5,0,3), dir=0)
-        self.place_entity(Box(color='blue', size=0.8), pos=(8.5,0,4), dir=0)
-        self.place_entity(Box(color='green', size=0.8), pos=(8.5,0,5), dir=0)
-        self.place_entity(Box(color='purple', size=0.8), pos=(8.5,0,6), dir=0)
-        self.place_entity(Box(color='red', size=0.8), pos=(8.5,0,7), dir=0)
+        self.place_entity(Box(color='yellow', size=0.8), pos=(5,0,1), dir=0)
+        self.place_entity(Box(color='blue', size=0.8), pos=(5,0,2), dir=0)
+        self.place_entity(Box(color='green', size=0.8), pos=(5,0,3), dir=0)
+        self.place_entity(Box(color='purple', size=0.8), pos=(5,0,4), dir=0)
+        self.place_entity(Box(color='red', size=0.8), pos=(5,0,5), dir=0)
         
         self.blocks = [entity for entity in self.entities if isinstance(entity, Box)]
 

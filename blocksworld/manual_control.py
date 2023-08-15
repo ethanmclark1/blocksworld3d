@@ -44,17 +44,13 @@ class ManualControl:
                 self.env.close()
 
             if symbol == key.UP:
-                self.step(self.env.actions.move_forward)
+                self.step(self.env.actions.pickup)
             elif symbol == key.DOWN:
-                self.step(self.env.actions.move_back)
+                self.step(self.env.actions.drop)
             elif symbol == key.LEFT:
                 self.step(self.env.actions.turn_left)
             elif symbol == key.RIGHT:
                 self.step(self.env.actions.turn_right)
-            elif symbol == key.PAGEUP or symbol == key.P:
-                self.step(self.env.actions.pickup)
-            elif symbol == key.PAGEDOWN or symbol == key.D:
-                self.step(self.env.actions.drop)
             elif symbol == key.ENTER:
                 self.step(self.env.actions.done)
 

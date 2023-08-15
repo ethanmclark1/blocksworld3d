@@ -73,7 +73,7 @@ from blocksworld.opengl import FrameBuffer, Texture, drawBox
 from blocksworld.params import DEFAULT_PARAMS
 
 # Default wall height for room
-DEFAULT_WALL_HEIGHT = 2.74
+DEFAULT_WALL_HEIGHT = 8
 
 # Texture size/density in texels/meter
 TEX_DENSITY = 512
@@ -453,19 +453,15 @@ class BlocksWorldEnv(gym.Env):
         turn_left = 0
         turn_right = 1
 
-        # Move forward or back by a small amount
-        move_forward = 2
-        move_back = 3
-
         # Pick up or drop an object being carried
-        pickup = 4
-        drop = 5
+        pickup = 2
+        drop = 3
 
         # Toggle/activate an object
-        toggle = 6
+        toggle = 4
 
         # Done completing task
-        done = 7
+        done = 5
 
     def __init__(
         self,
@@ -675,53 +671,57 @@ class BlocksWorldEnv(gym.Env):
         self.step_count += 1
 
         rand = self.np_random if self.domain_rand else None
-        fwd_step = self.params.sample(rand, "forward_step")
-        fwd_drift = self.params.sample(rand, "forward_drift")
         turn_step = self.params.sample(rand, "turn_step")
 
-        if action == self.actions.move_forward:
-            self.move_agent(fwd_step, fwd_drift)
-
-        elif action == self.actions.move_back:
-            self.move_agent(-fwd_step, fwd_drift)
-
-        elif action == self.actions.turn_left:
+        if action == self.actions.turn_left:
             self.turn_agent(turn_step)
 
         elif action == self.actions.turn_right:
             self.turn_agent(-turn_step)
 
-        # Pick up an object
         elif action == self.actions.pickup:
-            # Position at which we will test for an intersection
-            test_pos = self.agent.pos + self.agent.dir_vec * 1.5 * self.agent.radius
-            ent = self.intersect(self.agent, test_pos, 1.2 * self.agent.radius)
-            if not self.agent.carrying:
-                if isinstance(ent, Entity):
-                    if not ent.is_static and ent.is_beneath is None:
-                        self.agent.carrying = ent
-                        if ent.is_above:
-                            bottom_block = ent.is_above
+            test_pos = self.agent.pos
+            dir_vec = self.agent.dir_vec
+            usable_blocks = self.find_usable_blocks(test_pos, dir_vec)
+            
+            # Iterate through the sorted list of usable blocks and pick up the first suitable one
+            for closest_block in usable_blocks:
+                if not self.agent.carrying:
+                    if isinstance(closest_block, Entity) and closest_block.is_beneath is None:
+                        self.agent.carrying = closest_block
+                        if closest_block.is_above:
+                            bottom_block = closest_block.is_above
                             bottom_block.is_beneath = None
-                            ent.is_above = None
+                            closest_block.is_above = None
+                break
 
         elif action == self.actions.drop:
             if self.agent.carrying:
-                threshold = 1.5
                 current_block = self.agent.carrying
-                new_pos = current_block.pos.copy()
-                new_pos[1] = 0.0
-                for other_block in self.blocks:
-                    if other_block != current_block:
-                        dist = np.linalg.norm(other_block.pos - current_block.pos)
-                        if dist < threshold:
-                            new_pos = np.array(other_block.pos)
-                            new_pos[1] = other_block.height
-                            other_block.is_beneath = current_block
-                            current_block.is_above = other_block
-                            break
-                        
+
+                # Find the sorted list of usable blocks
+                test_pos = self.agent.pos
+                dir_vec = self.agent.dir_vec
+                sorted_blocks = self.find_usable_blocks(test_pos, dir_vec)
+
+                # Iterate through the sorted blocks to find the first suitable target block
+                for target_block in sorted_blocks:
+                    if current_block != target_block and target_block.is_beneath is None:
+                        new_pos = np.array(target_block.pos, dtype=np.float32)
+                        new_pos[1] = target_block.pos[1] + target_block.height
+                        new_dir = target_block.dir
+                        target_block.is_beneath = current_block
+                        current_block.is_above = target_block
+                        break
+                else:
+                    # If no suitable target block found, place the carried block at a default position
+                    new_pos = current_block.pos.copy()
+                    new_pos[1] = 0.0
+                    new_dir = current_block.dir
+
+                # Update the position and direction of the carried block and release it
                 self.agent.carrying.pos = new_pos
+                self.agent.carrying.dir = new_dir
                 self.agent.carrying = None
 
         # If we are carrying an object, update its position as we move
@@ -982,6 +982,32 @@ class BlocksWorldEnv(gym.Env):
                 return ent2
 
         return None
+    
+    # TODO: Fix finding the closest block in the linesight
+    def intersect_ray_block(self, ray_origin, ray_dir, block):
+        # The block's width and depth are 2 times its radius
+        size = 2 * block.radius
+
+        bounds_min = np.array([block.pos[0], 0, block.pos[2]]) - np.array([size / 2, 0, size / 2])
+        bounds_max = np.array([block.pos[0], 0, block.pos[2]]) + np.array([size / 2, 0, size / 2])
+
+        tmin = -np.inf
+        tmax = np.inf
+
+        # Check intersections only for x and z coordinates (i=0 and i=2)
+        for i in [0, 2]:
+            if ray_dir[i] != 0:
+                t1 = (bounds_min[i] - ray_origin[i]) / ray_dir[i]
+                t2 = (bounds_max[i] - ray_origin[i]) / ray_dir[i]
+                ti_min = min(t1, t2)
+                ti_max = max(t1, t2)
+                tmin = max(tmin, ti_min)
+                tmax = min(tmax, ti_max)
+
+        if tmin > tmax or tmax < 0:
+            return None
+
+        return tmin
 
     def near(self, ent0, ent1=None):
         """
@@ -994,6 +1020,21 @@ class BlocksWorldEnv(gym.Env):
 
         dist = np.linalg.norm(ent0.pos - ent1.pos)
         return dist < ent0.radius + ent1.radius + 1.1 * self.max_forward_step
+    
+    # TODO: Fix finding the closest block in the linesight
+    def find_usable_blocks(self, ray_origin, ray_dir):
+        usable_blocks = []
+
+        # Iterate through all blocks
+        for block in self.blocks:
+            # Check for intersection with the ray
+            t = self.intersect_ray_block(ray_origin, ray_dir, block)
+            if t is not None:
+                usable_blocks.append((t, block))
+
+        # Sort by t (distance along the ray) and return the sorted blocks
+        usable_blocks.sort(key=lambda x: x[0])
+        return [block for _, block in usable_blocks]
 
     def _load_tex(self, tex_name):
         """
