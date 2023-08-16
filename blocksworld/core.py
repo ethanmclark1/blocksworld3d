@@ -538,7 +538,7 @@ class BlocksWorldEnv(gym.Env):
         )
 
         # Initialize the state
-        self.reset()
+        self.reset(options={'problem_id': 0})
 
     def reset(
         self, *, seed: Optional[int] = None, options: Optional[dict] = None
@@ -566,7 +566,11 @@ class BlocksWorldEnv(gym.Env):
         self.wall_segs = []
 
         # Generate the world
-        self._gen_world()
+        if options is None:
+            options = {}
+            options['problem_id'] = 0
+            
+        self._gen_world(options['problem_id'])
 
         # Check if domain randomization is enabled or not
         rand = self.np_random if self.domain_rand else None
@@ -697,7 +701,7 @@ class BlocksWorldEnv(gym.Env):
                         break
                 else:
                     # If no suitable target blocks found, place the carried blocks at a default position
-                    closest_spot = min(self.drop_spots, key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
+                    closest_spot = min(self.spots, key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
                     new_pos = closest_spot
                     new_dir = 0
                     

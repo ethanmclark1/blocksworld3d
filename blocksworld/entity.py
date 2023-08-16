@@ -40,6 +40,7 @@ COLORS = {
 COLOR_NAMES = sorted(list(COLORS.keys()))
 
 
+
 class Entity:
     def __init__(self):
         # World position

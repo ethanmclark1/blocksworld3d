@@ -20,7 +20,7 @@ class ManualControl:
         print("move: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
         print("============")
 
-        self.env.reset()
+        self.env.reset(options={'problem_id': 1})
 
         # Create the display window
         self.env.render()
@@ -36,7 +36,7 @@ class ManualControl:
 
             if symbol == key.BACKSPACE or symbol == key.SLASH:
                 print("RESET")
-                self.env.reset()
+                self.env.reset(options={'problem_id': 1})
                 self.env.render()
                 return
 
