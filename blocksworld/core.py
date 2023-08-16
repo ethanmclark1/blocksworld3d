@@ -78,6 +78,9 @@ DEFAULT_WALL_HEIGHT = 8
 # Texture size/density in texels/meter
 TEX_DENSITY = 512
 
+MIN_TURN_ANGLE = -45
+MAX_TURN_ANGLE = 45
+
 
 def gen_texcs_wall(tex, min_x, min_y, width, height):
     """
@@ -613,33 +616,6 @@ class BlocksWorldEnv(gym.Env):
 
         return pos
 
-    def move_agent(self, fwd_dist, fwd_drift):
-        """
-        Move the agent forward
-        """
-
-        next_pos = (
-            self.agent.pos
-            + self.agent.dir_vec * fwd_dist
-            + self.agent.right_vec * fwd_drift
-        )
-
-        if self.intersect(self.agent, next_pos, self.agent.radius):
-            return False
-
-        carrying = self.agent.carrying
-        if carrying:
-            next_carrying_pos = self._get_carry_pos(next_pos, carrying)
-
-            if self.intersect(carrying, next_carrying_pos, carrying.radius):
-                return False
-
-            carrying.pos = next_carrying_pos
-
-        self.agent.pos = next_pos
-
-        return True
-
     def turn_agent(self, turn_angle):
         """
         Turn the agent left or right
@@ -647,8 +623,13 @@ class BlocksWorldEnv(gym.Env):
 
         turn_angle *= math.pi / 180
         orig_dir = self.agent.dir
-
-        self.agent.dir += turn_angle
+        new_dir = orig_dir + turn_angle
+        
+        if MIN_TURN_ANGLE * math.pi / 180 < new_dir < MAX_TURN_ANGLE * math.pi / 180:
+            self.agent.dir = new_dir
+        else:
+            # Revert to the original direction if out of bounds
+            return False
 
         carrying = self.agent.carrying
         if carrying:
@@ -682,10 +663,10 @@ class BlocksWorldEnv(gym.Env):
         elif action == self.actions.pickup:
             test_pos = self.agent.pos
             dir_vec = self.agent.dir_vec
-            usable_blocks = self.find_usable_blocks(test_pos, dir_vec)
+            sorted_blocks = self.get_center_block(test_pos, dir_vec)
             
             # Iterate through the sorted list of usable blocks and pick up the first suitable one
-            for closest_block in usable_blocks:
+            for closest_block in sorted_blocks:
                 if not self.agent.carrying:
                     if isinstance(closest_block, Entity) and closest_block.is_beneath is None:
                         self.agent.carrying = closest_block
@@ -693,7 +674,8 @@ class BlocksWorldEnv(gym.Env):
                             bottom_block = closest_block.is_above
                             bottom_block.is_beneath = None
                             closest_block.is_above = None
-                break
+                else:
+                    break
 
         elif action == self.actions.drop:
             if self.agent.carrying:
@@ -702,9 +684,9 @@ class BlocksWorldEnv(gym.Env):
                 # Find the sorted list of usable blocks
                 test_pos = self.agent.pos
                 dir_vec = self.agent.dir_vec
-                sorted_blocks = self.find_usable_blocks(test_pos, dir_vec)
+                sorted_blocks = self.get_center_block(test_pos, dir_vec)
 
-                # Iterate through the sorted blocks to find the first suitable target block
+                # Iterate through the sorted blocks to find the first suitable target blocks
                 for target_block in sorted_blocks:
                     if current_block != target_block and target_block.is_beneath is None:
                         new_pos = np.array(target_block.pos, dtype=np.float32)
@@ -714,12 +696,12 @@ class BlocksWorldEnv(gym.Env):
                         current_block.is_above = target_block
                         break
                 else:
-                    # If no suitable target block found, place the carried block at a default position
-                    new_pos = current_block.pos.copy()
-                    new_pos[1] = 0.0
-                    new_dir = current_block.dir
-
-                # Update the position and direction of the carried block and release it
+                    # If no suitable target blocks found, place the carried blocks at a default position
+                    closest_spot = min(self.drop_spots, key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
+                    new_pos = closest_spot
+                    new_dir = 0
+                    
+                # Update the position and direction of the carried blocks and release it
                 self.agent.carrying.pos = new_pos
                 self.agent.carrying.dir = new_dir
                 self.agent.carrying = None
@@ -983,13 +965,11 @@ class BlocksWorldEnv(gym.Env):
 
         return None
     
-    # TODO: Fix finding the closest block in the linesight
-    def intersect_ray_block(self, ray_origin, ray_dir, block):
-        # The block's width and depth are 2 times its radius
-        size = 2 * block.radius
+    def intersect_ray_block(self, ray_origin, ray_dir, blocks):
+        size = 2 * blocks.radius
 
-        bounds_min = np.array([block.pos[0], 0, block.pos[2]]) - np.array([size / 2, 0, size / 2])
-        bounds_max = np.array([block.pos[0], 0, block.pos[2]]) + np.array([size / 2, 0, size / 2])
+        bounds_min = np.array([blocks.pos[0], 0, blocks.pos[2]]) - np.array([size / 2, 0, size / 2])
+        bounds_max = np.array([blocks.pos[0], 0, blocks.pos[2]]) + np.array([size / 2, 0, size / 2])
 
         tmin = -np.inf
         tmax = np.inf
@@ -1003,38 +983,27 @@ class BlocksWorldEnv(gym.Env):
                 ti_max = max(t1, t2)
                 tmin = max(tmin, ti_min)
                 tmax = min(tmax, ti_max)
+            elif i == 2 and (bounds_min[i] <= ray_origin[i] <= bounds_max[i]):
+                continue
+            else:
+                return None
 
         if tmin > tmax or tmax < 0:
             return None
 
         return tmin
-
-    def near(self, ent0, ent1=None):
-        """
-        Test if the two entities are near each other.
-        Used for "go to" or "put next" type tasks
-        """
-
-        if ent1 is None:
-            ent1 = self.agent
-
-        dist = np.linalg.norm(ent0.pos - ent1.pos)
-        return dist < ent0.radius + ent1.radius + 1.1 * self.max_forward_step
     
-    # TODO: Fix finding the closest block in the linesight
-    def find_usable_blocks(self, ray_origin, ray_dir):
-        usable_blocks = []
+    # Gets the closest blocks in the linesight
+    def get_center_block(self, ray_origin, ray_dir):
+        sorted_blocks = []
 
-        # Iterate through all blocks
-        for block in self.blocks:
-            # Check for intersection with the ray
-            t = self.intersect_ray_block(ray_origin, ray_dir, block)
+        for blocks in self.blocks:
+            t = self.intersect_ray_block(ray_origin, ray_dir, blocks)
             if t is not None:
-                usable_blocks.append((t, block))
+                sorted_blocks.append((t, blocks))
 
-        # Sort by t (distance along the ray) and return the sorted blocks
-        usable_blocks.sort(key=lambda x: x[0])
-        return [block for _, block in usable_blocks]
+        sorted_blocks.sort(key=lambda x: x[0])
+        return [blocks for _, blocks in sorted_blocks]
 
     def _load_tex(self, tex_name):
         """
@@ -1282,21 +1251,6 @@ class BlocksWorldEnv(gym.Env):
         
 
         return self._render_world(frame_buffer, render_agent=False)
-
-    def render_depth(self, frame_buffer=None):
-        """
-        Produce a depth map
-        Values are floating-point, map shape is (H,W,1)
-        Distances are in meters from the observer
-        """
-
-        if frame_buffer is None:
-            frame_buffer = self.obs_fb
-
-        # Render the world
-        self.render_obs(frame_buffer)
-
-        return frame_buffer.get_depth_map(0.04, 100.0)
 
     def get_visible_ents(self):
         """

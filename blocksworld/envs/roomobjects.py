@@ -1,7 +1,8 @@
 import math
+import numpy as np
 
 from gymnasium import utils
-from blocksworld.entity import Box
+from blocksworld.entity import Block, COLOR_NAMES
 from blocksworld.core import BlocksWorldEnv
 
 
@@ -25,17 +26,13 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
 
         self.agent.radius = 1
         self.place_agent(cam_height=0, pos=(1,0,3), dir=0)
+        self.drop_spots = [np.array((5,0,z)) for z in range(1,6)]
+        self.blocks = [Block(color=color, size=0.8) for color in COLOR_NAMES[:5]]
         
-        # TODO: Fix placing block in the crosshairs
-        # TODO: Fix picking up a block in the crosshairs
-        
-        self.place_entity(Box(color='yellow', size=0.8), pos=(5,0,1), dir=0)
-        self.place_entity(Box(color='blue', size=0.8), pos=(5,0,2), dir=0)
-        self.place_entity(Box(color='green', size=0.8), pos=(5,0,3), dir=0)
-        self.place_entity(Box(color='purple', size=0.8), pos=(5,0,4), dir=0)
-        self.place_entity(Box(color='red', size=0.8), pos=(5,0,5), dir=0)
-        
-        self.blocks = [entity for entity in self.entities if isinstance(entity, Box)]
+        # TODO: Add random ordering of blocks
+        for blocks, pos in zip(self.blocks, self.drop_spots):
+            self.place_entity(blocks, pos=pos, dir=0)
+                
 
     def step(self, action):
         obs, reward, termination, truncation, info = super().step(action)

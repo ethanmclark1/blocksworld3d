@@ -383,9 +383,9 @@ class TextFrame(Entity):
         glPopMatrix()
 
 
-class Box(Entity):
+class Block(Entity):
     """
-    Colored box object
+    Colored block object
     """
 
     def __init__(self, color, size=0.8):
@@ -516,39 +516,6 @@ class Agent(Entity):
                 "cam_fov_y",
             ],
         )
-        # self.radius = params.sample(rng, 'bot_radius')
-
-    def render(self):
-        """
-        Draw the agent
-        """
-
-        # Note: this is currently only used in the top view
-        # Eventually, we will want a proper 3D model
-
-        p = self.pos + Y_VEC * self.height
-        dv = self.dir_vec * self.radius
-        rv = self.right_vec * self.radius
-
-        p0 = p + dv
-        p1 = p + 0.75 * (rv - dv)
-        p2 = p + 0.75 * (-rv - dv)
-
-        glColor3f(1, 0, 0)
-        glBegin(GL_TRIANGLES)
-        glVertex3f(*p0)
-        glVertex3f(*p2)
-        glVertex3f(*p1)
-        glEnd()
-
-        """
-        glBegin(GL_LINE_STRIP)
-        for i in range(20):
-            a = (2 * math.pi * i) / 20
-            pc = p + dv * math.cos(a) + rv * math.sin(a)
-            glVertex3f(*pc)
-        glEnd()
-        """
 
     def step(self, delta_time):
         pass
