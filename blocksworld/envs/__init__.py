@@ -1,12 +1,12 @@
 import gymnasium as gym
 
-from blocksworld.envs.roomobjects import RoomObjects
+from blocksworld.envs.blocksworld import BlocksWorld
 
 __all__ = [
-    "RoomObjects",
+    "BlocksWorld",
 ]
 
 gym.register(
-    id="BlocksWorld-RoomObjects-v0",
-    entry_point="blocksworld.envs.roomobjects:RoomObjects",
+    id="BlocksWorld-BlocksWorld-v0",
+    entry_point="blocksworld.envs.blocksworld:BlocksWorld",
 )

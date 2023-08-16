@@ -1,1 +1,2 @@
-from blocksworld import core, envs
+from blocksworld import envs
+from blocksworld.utils import core

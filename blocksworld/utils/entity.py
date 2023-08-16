@@ -23,9 +23,9 @@ from pyglet.gl import (
     glVertex3f,
 )
 
-from blocksworld.math import X_VEC, Y_VEC, Z_VEC, gen_rot_matrix
-from blocksworld.objmesh import ObjMesh
-from blocksworld.opengl import Texture, drawBox
+from blocksworld.utils.math import X_VEC, Y_VEC, Z_VEC, gen_rot_matrix
+from blocksworld.utils.objmesh import ObjMesh
+from blocksworld.utils.opengl import Texture, drawBox
 
 COLORS = {
     "red": np.array([1.0, 0.0, 0.0]),

@@ -1,19 +1,19 @@
 import numpy as np
 
 from gymnasium import utils
-from blocksworld.entity import Block
-from blocksworld.core import BlocksWorldEnv
-from blocksworld.problems import get_problem_instance
+from blocksworld.utils.entity import Block
+from blocksworld.utils.core import MiniWorldEnv
+from blocksworld.utils.problems import get_problem_instance
 
 
-class RoomObjects(BlocksWorldEnv, utils.EzPickle):
+class BlocksWorld(MiniWorldEnv, utils.EzPickle):
     BLOCK_SIZE = 0.6
 
     def __init__(self, size=6, **kwargs):
         self.size = size
         self.spots = [np.array((5, 0, z)) for z in range(1, self.size)]
         
-        BlocksWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
+        MiniWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
         utils.EzPickle.__init__(self, size, **kwargs)
         
     def _gen_world(self, problem_id):

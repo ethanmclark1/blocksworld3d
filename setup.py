@@ -14,12 +14,7 @@ setup(
     keywords=["Environment", "Agent", "RL", "Gym", "Robotics", "3D"],
     python_requires=">=3.7, <3.11",
     packages=["blocksworld", "blocksworld.envs"],
-    package_data={
-        "blocksworld": [
-            "textures/*.png",
-            "textures/portraits/*.png",
-        ]
-    },
+    package_data={"blocksworld": ["textures/*.png",]},
     extras_require={"testing": ["pytest==7.0.1", "torch"]},
     install_requires=[
         "numpy>=1.18.0",

@@ -67,10 +67,10 @@ from pyglet.gl import (
     glVertex3f,
 )
 
-from blocksworld.entity import Agent, Entity
-from blocksworld.math import Y_VEC, intersect_circle_segs
-from blocksworld.opengl import FrameBuffer, Texture, drawBox
-from blocksworld.params import DEFAULT_PARAMS
+from blocksworld.utils.entity import Agent, Entity
+from blocksworld.utils.math import Y_VEC, intersect_circle_segs
+from blocksworld.utils.opengl import FrameBuffer, Texture, drawBox
+from blocksworld.utils.params import DEFAULT_PARAMS
 
 # Default wall height for room
 DEFAULT_WALL_HEIGHT = 8
@@ -437,7 +437,7 @@ class Room:
         glEnd()
 
 
-class BlocksWorldEnv(gym.Env):
+class MiniWorldEnv(gym.Env):
     """
     Base class for BlocksWorld environments. Implements the procedural
     world generation and simulation logic.
@@ -479,7 +479,7 @@ class BlocksWorldEnv(gym.Env):
         view: str = "agent",
     ):
         # Action enumeration for this environment
-        self.actions = BlocksWorldEnv.Actions
+        self.actions = MiniWorldEnv.Actions
 
         # Actions are discrete integer values
         self.action_space = spaces.Discrete(len(self.actions))

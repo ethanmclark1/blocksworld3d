@@ -3,7 +3,7 @@ import pyglet
 import numpy as np
 
 from pyglet.window import key
-from problems import get_num_problems
+from utils.problems import get_num_problems
 
 
 class ManualControl:
