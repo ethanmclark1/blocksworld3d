@@ -465,7 +465,7 @@ class Agent(Entity):
 
         # Camera up/down angles in degrees
         # Positive angles tilt the camera upwards
-        self.cam_pitch = 0
+        self.cam_pitch = 20
 
         # Vertical field of view in degrees
         self.cam_fov_y = 60

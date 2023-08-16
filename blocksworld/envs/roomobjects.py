@@ -1,17 +1,17 @@
 import numpy as np
 
 from gymnasium import utils
+from blocksworld.entity import Block
 from blocksworld.core import BlocksWorldEnv
-from blocksworld.entity import Block, COLOR_NAMES
 from blocksworld.problems import get_problem_instance
 
 
 class RoomObjects(BlocksWorldEnv, utils.EzPickle):
-    BLOCK_SIZE = 0.8
+    BLOCK_SIZE = 0.6
 
     def __init__(self, size=6, **kwargs):
         self.size = size
-        self.spots = [np.array((5, 0, z)) for z in range(1, 6)]
+        self.spots = [np.array((5, 0, z)) for z in range(1, self.size)]
         
         BlocksWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
         utils.EzPickle.__init__(self, size, **kwargs)
@@ -20,7 +20,7 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
         """Generate the world based on the problem ID."""
         self._create_room()
         self._place_agent()
-        self.blocks, self.start, self.goal = self._gen_blocks(problem_id)
+        self.blocks, self.state, self.goal = self._gen_blocks(problem_id)
 
     def _create_room(self):
         """Add room with specific boundaries and textures."""
@@ -47,7 +47,7 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
             if len(stack) > 0:
                 prev_block = None
                 for block_idx, block in enumerate(stack):
-                    block = Block(color=COLOR_NAMES[block], size=self.BLOCK_SIZE)
+                    block = Block(color=block, size=self.BLOCK_SIZE)
                     pos = self.spots[stack_idx] + np.array((0, block_idx * self.BLOCK_SIZE, 0))
                     self.place_entity(block, pos=pos, dir=0)
 
@@ -64,9 +64,21 @@ class RoomObjects(BlocksWorldEnv, utils.EzPickle):
         """Step the environment with the given action."""
         obs, reward, termination, truncation, info = super().step(action)
         
-        # TODO: Check for goal state
-        # TODO: Add reward for goal state
-        # TODO: Add termination for goal state
-        # TODO: Fix episode reset not persisting the problem ID
+        if self.state == self.goal:
+            reward += 10
+            termination = True
+        
                 
         return obs, reward, termination, truncation, info
+    
+    def update_representation(self, block, loc=None):
+        """Update the internal representation of the blocksworld state."""
+        if loc is None:
+            # Remove block from state during pickup action
+            for idx, stack in enumerate(self.state):
+                if block.color in stack:
+                    self.state[idx].remove(block.color)
+                    break
+        else:
+            # Add block to state during drop action
+            self.state[loc].append(block.color)

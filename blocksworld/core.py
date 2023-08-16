@@ -674,6 +674,7 @@ class BlocksWorldEnv(gym.Env):
                 if not self.agent.carrying:
                     if isinstance(closest_block, Entity) and closest_block.is_beneath is None:
                         self.agent.carrying = closest_block
+                        self.update_representation(closest_block)
                         if closest_block.is_above:
                             bottom_block = closest_block.is_above
                             bottom_block.is_beneath = None
@@ -690,7 +691,7 @@ class BlocksWorldEnv(gym.Env):
                 dir_vec = self.agent.dir_vec
                 sorted_blocks = self.get_center_block(test_pos, dir_vec)
 
-                # Iterate through the sorted blocks to find the first suitable target blocks
+                # Iterate through the sorted blocks to find the first suitable target block
                 for target_block in sorted_blocks:
                     if current_block != target_block and target_block.is_beneath is None:
                         new_pos = np.array(target_block.pos, dtype=np.float32)
@@ -698,17 +699,22 @@ class BlocksWorldEnv(gym.Env):
                         new_dir = target_block.dir
                         target_block.is_beneath = current_block
                         current_block.is_above = target_block
+                        loc = int(target_block.pos[2] - 1)
                         break
                 else:
-                    # If no suitable target blocks found, place the carried blocks at a default position
+                    # If no suitable target block found, place the carried blocks at a default position
                     closest_spot = min(self.spots, key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
                     new_pos = closest_spot
+                    loc = closest_spot[2] - 1
                     new_dir = 0
-                    
+                
                 # Update the position and direction of the carried blocks and release it
                 self.agent.carrying.pos = new_pos
                 self.agent.carrying.dir = new_dir
                 self.agent.carrying = None
+                
+                # Update the interal representation of the blocks
+                self.update_representation(current_block, loc)
 
         # If we are carrying an object, update its position as we move
         if self.agent.carrying:
@@ -1387,8 +1393,8 @@ class BlocksWorldEnv(gym.Env):
         obs_width = obs.shape[1]
         obs_height = obs.shape[0]
 
-        window_width = img_width + self.obs_disp_width
-        window_height = img_height
+        window_width = img_width + self.obs_disp_width + 200
+        window_height = max(img_height, self.obs_disp_height)
 
         if self.window is None:
             config = pyglet.gl.Config(double_buffer=True)
@@ -1435,7 +1441,7 @@ class BlocksWorldEnv(gym.Env):
             pitch=obs_width * 3,
         )
         obs_data.blit(
-            img_width,
+            img_width,  # Shift right
             img_height - self.obs_disp_height,
             0,
             width=self.obs_disp_width,
@@ -1443,10 +1449,12 @@ class BlocksWorldEnv(gym.Env):
         )
 
         # Draw the text label in the window
-        self.text_label.text = "pos: (%.2f, %.2f, %.2f)\nangle: %d\nsteps: %d" % (
+        self.text_label.text = "pos: (%.2f, %.2f, %.2f)\nangle: %d\nsteps: %d\nstate: %s\ngoal: %s" % (
             *self.agent.pos,
             int(self.agent.dir * 180 / math.pi) % 360,
             self.step_count,
+            self.state,
+            self.goal
         )
         self.text_label.draw()
 

@@ -1,12 +1,16 @@
 import math
-
 import pyglet
+import numpy as np
+
 from pyglet.window import key
+from problems import get_num_problems
 
 
 class ManualControl:
     def __init__(self, env, no_time_limit, domain_rand):
         self.env = env
+        num_probs = get_num_problems()
+        self.problem_id = np.random.choice(num_probs)
 
         if no_time_limit:
             self.env.max_episode_steps = math.inf
@@ -20,7 +24,7 @@ class ManualControl:
         print("move: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
         print("============")
 
-        self.env.reset(options={'problem_id': 1})
+        self.env.reset(options={'problem_id': self.problem_id})
 
         # Create the display window
         self.env.render()
@@ -36,7 +40,7 @@ class ManualControl:
 
             if symbol == key.BACKSPACE or symbol == key.SLASH:
                 print("RESET")
-                self.env.reset(options={'problem_id': 1})
+                self.env.reset(options={'problem_id': self.problem_id})
                 self.env.render()
                 return
 
@@ -87,6 +91,6 @@ class ManualControl:
 
         if termination or truncation:
             print("done!")
-            self.env.reset()
+            self.env.reset(options={'problem_id': self.problem_id})
 
         self.env.render()
