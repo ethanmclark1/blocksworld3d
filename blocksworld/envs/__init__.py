@@ -7,6 +7,6 @@ __all__ = [
 ]
 
 gym.register(
-    id="BlocksWorld-BlocksWorld-v0",
+    id="BlocksWorld-v0",
     entry_point="blocksworld.envs.blocksworld:BlocksWorld",
 )

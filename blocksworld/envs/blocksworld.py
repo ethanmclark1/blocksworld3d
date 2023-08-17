@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from gymnasium import utils
@@ -11,7 +12,10 @@ class BlocksWorld(MiniWorldEnv, utils.EzPickle):
 
     def __init__(self, size=6, **kwargs):
         self.size = size
-        self.spots = [np.array((5, 0, z)) for z in range(1, self.size)]
+        self.cur_row = 0
+        self.prev_dir = None
+        self.spots = [[np.array((4, 0, z)) for z in range(1, self.size)],
+                      [np.array((5, 0, z)) for z in range(1, self.size)]]
         
         MiniWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
         utils.EzPickle.__init__(self, size, **kwargs)
@@ -37,26 +41,29 @@ class BlocksWorld(MiniWorldEnv, utils.EzPickle):
     def _place_agent(self):
         """Place the agent in the world."""
         self.agent.radius = 1
-        self.place_agent(cam_height=0, pos=(1, 0, 3), dir=0)
+        dir = np.random.choice((-1, 1)) * 30 * math.pi / 180
+        self.place_agent(cam_height=0, pos=(1, 0, 3), dir=dir)
 
     def _gen_blocks(self, problem_id):
         """Generate blocks based on the problem ID."""
         start, goal = get_problem_instance(problem_id)
         blocks = []
-        for stack_idx, stack in enumerate(start):
-            if len(stack) > 0:
-                prev_block = None
-                for block_idx, block in enumerate(stack):
-                    block = Block(color=block, size=self.BLOCK_SIZE)
-                    pos = self.spots[stack_idx] + np.array((0, block_idx * self.BLOCK_SIZE, 0))
-                    self.place_entity(block, pos=pos, dir=0)
+        
+        for row_idx, row in enumerate(start):
+            for stack_idx, stack in enumerate(row):
+                if len(stack) > 0:
+                    prev_block = None
+                    for block_idx, block in enumerate(stack):
+                        block = Block(color=block, size=self.BLOCK_SIZE)
+                        pos = self.spots[row_idx][stack_idx] + np.array((0, block_idx * self.BLOCK_SIZE, 0))
+                        self.place_entity(block, pos=pos, dir=0)
 
-                    if prev_block:
-                        prev_block.is_beneath = block
-                        block.is_above = prev_block
+                        if prev_block:
+                            prev_block.is_beneath = block
+                            block.is_above = prev_block
 
-                    blocks.append(block)
-                    prev_block = block
+                        blocks.append(block)
+                        prev_block = block
 
         return blocks, start, goal
 
@@ -65,9 +72,10 @@ class BlocksWorld(MiniWorldEnv, utils.EzPickle):
         obs, reward, termination, truncation, info = super().step(action)
         
         if self.state == self.goal:
-            reward += 10
+            reward = 5
             termination = True
         
+        reward = -0.1 if reward == 0 else reward
                 
         return obs, reward, termination, truncation, info
     
@@ -81,4 +89,4 @@ class BlocksWorld(MiniWorldEnv, utils.EzPickle):
                     break
         else:
             # Add block to state during drop action
-            self.state[loc].append(block.color)
+            self.state[self.cur_row][loc].append(block.color)

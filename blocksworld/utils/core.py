@@ -460,8 +460,8 @@ class MiniWorldEnv(gym.Env):
         pickup = 2
         drop = 3
 
-        # Toggle/activate an object
-        toggle = 4
+        # Toggle row
+        toggle_row = 4
 
         # Done completing task
         done = 5
@@ -619,10 +619,16 @@ class MiniWorldEnv(gym.Env):
         pos = pos + Y_VEC * y_pos
 
         return pos
+    
+    def _get_blocks_in_row(self):
+        """"Return list of blocks in current row"""
+        blocks_in_row = [block for block in self.blocks if block.pos[0] - 4 == self.cur_row]
+        return blocks_in_row
 
     def turn_agent(self, turn_angle):
         """
-        Turn the agent left or right
+        Turn agent left or right according to previous action
+        Agent must move left-to-right or right-to-left all the way before switching directions
         """
 
         turn_angle *= math.pi / 180
@@ -630,9 +636,11 @@ class MiniWorldEnv(gym.Env):
         new_dir = orig_dir + turn_angle
         
         if MIN_TURN_ANGLE * math.pi / 180 < new_dir < MAX_TURN_ANGLE * math.pi / 180:
-            self.agent.dir = new_dir
+            angle = round(self.agent.dir * 180 / math.pi)
+            if np.sign(turn_angle) == self.prev_dir or np.abs(angle) == 30:
+                self.agent.dir = new_dir
+                self.prev_dir = np.sign(turn_angle)
         else:
-            # Revert to the original direction if out of bounds
             return False
 
         carrying = self.agent.carrying
@@ -667,7 +675,8 @@ class MiniWorldEnv(gym.Env):
         elif action == self.actions.pickup:
             test_pos = self.agent.pos
             dir_vec = self.agent.dir_vec
-            sorted_blocks = self.get_center_block(test_pos, dir_vec)
+            current_row_blocks = self._get_blocks_in_row()
+            sorted_blocks = self._get_center_block(test_pos, dir_vec, current_row_blocks)
             
             # Iterate through the sorted list of usable blocks and pick up the first suitable one
             for closest_block in sorted_blocks:
@@ -689,7 +698,8 @@ class MiniWorldEnv(gym.Env):
                 # Find the sorted list of usable blocks
                 test_pos = self.agent.pos
                 dir_vec = self.agent.dir_vec
-                sorted_blocks = self.get_center_block(test_pos, dir_vec)
+                current_row_blocks = self._get_blocks_in_row()
+                sorted_blocks = self._get_center_block(test_pos, dir_vec, current_row_blocks)
 
                 # Iterate through the sorted blocks to find the first suitable target block
                 for target_block in sorted_blocks:
@@ -703,7 +713,7 @@ class MiniWorldEnv(gym.Env):
                         break
                 else:
                     # If no suitable target block found, place the carried blocks at a default position
-                    closest_spot = min(self.spots, key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
+                    closest_spot = min(self.spots[self.cur_row], key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
                     new_pos = closest_spot
                     loc = closest_spot[2] - 1
                     new_dir = 0
@@ -715,6 +725,9 @@ class MiniWorldEnv(gym.Env):
                 
                 # Update the interal representation of the blocks
                 self.update_representation(current_block, loc)
+                
+        elif action == self.actions.toggle_row:
+            self.cur_row = not self.cur_row
 
         # If we are carrying an object, update its position as we move
         if self.agent.carrying:
@@ -1004,10 +1017,10 @@ class MiniWorldEnv(gym.Env):
         return tmin
     
     # Gets the closest blocks in the linesight
-    def get_center_block(self, ray_origin, ray_dir):
+    def _get_center_block(self, ray_origin, ray_dir, current_row_blocks):
         sorted_blocks = []
 
-        for blocks in self.blocks:
+        for blocks in current_row_blocks:
             t = self.intersect_ray_block(ray_origin, ray_dir, blocks)
             if t is not None:
                 sorted_blocks.append((t, blocks))
@@ -1110,12 +1123,15 @@ class MiniWorldEnv(gym.Env):
 
         # Call the display list for the static parts of the environment
         glCallList(1)
+        
+        camera_pos = self.agent.cam_pos
+        sorted_entities = sorted(self.entities, key=lambda ent: -np.linalg.norm(ent.pos - camera_pos))
 
-        # TODO: keep the non-static entities in a different list for efficiency?
         # Render the non-static entities
-        for ent in self.entities:
+        for ent in sorted_entities:
             if not ent.is_static and ent is not self.agent:
-                ent.render()
+                opacity = 1 if ent.pos[0] - 4 == self.cur_row or self.agent.carrying == ent else 0.35
+                ent.render(opacity)
                 # ent.draw_bound()
 
         if render_agent:
@@ -1449,9 +1465,10 @@ class MiniWorldEnv(gym.Env):
         )
 
         # Draw the text label in the window
-        self.text_label.text = "pos: (%.2f, %.2f, %.2f)\nangle: %d\nsteps: %d\nstate: %s\ngoal: %s" % (
+        self.text_label.text = "pos: (%.2f, %.2f, %.2f)\nangle: %d\ncur_row: %i\nsteps: %d\nstate: %s\ngoal: %s" % (
             *self.agent.pos,
             int(self.agent.dir * 180 / math.pi) % 360,
+            self.cur_row, 
             self.step_count,
             self.state,
             self.goal

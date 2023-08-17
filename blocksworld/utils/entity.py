@@ -4,12 +4,17 @@ import numpy as np
 
 # Map of color names to RGB values
 from pyglet.gl import (
+    GL_BLEND,
     GL_LINES,
+    GL_ONE_MINUS_SRC_ALPHA,
     GL_QUADS,
+    GL_SRC_ALPHA,
     GL_TEXTURE_2D,
     GL_TRIANGLES,
     glBegin,
+    glBlendFunc,
     glColor3f,
+    glColor4f,
     glDisable,
     glEnable,
     glEnd,
@@ -410,7 +415,7 @@ class Block(Entity):
         self.color_vec = COLORS[self.color] + params.sample(rng, "obj_color_bias")
         self.color_vec = np.clip(self.color_vec, 0, 1)
 
-    def render(self):
+    def render(self, opacity=1):
         """
         Draw the object
         """
@@ -418,7 +423,10 @@ class Block(Entity):
         sx, sy, sz = self.size
 
         glDisable(GL_TEXTURE_2D)
-        glColor3f(*self.color_vec)
+        glColor4f(*self.color_vec, opacity) # Set the fourth component as opacity
+
+        glEnable(GL_BLEND) # Enable blending to handle transparency
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         glPushMatrix()
         glTranslatef(*self.pos)
@@ -434,6 +442,9 @@ class Block(Entity):
         )
 
         glPopMatrix()
+
+        glDisable(GL_BLEND) # Disable blending after drawing the block
+
 
 
 class Key(MeshEnt):
