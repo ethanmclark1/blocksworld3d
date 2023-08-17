@@ -2,10 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="blocksworld3d",
-    version="0.1.2",
+    version="0.1.3",
     author="Ethan Clark",
     author_email="eclark715@gmail.com",
     description="Minimalistic 3D blocksworld environment simulator for reinforcement learning & robotics research.",
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     url="https://github.com/ethanmclark1/blocksworld3d",
     license="Apache",
     license_files=("LICENSE",),
