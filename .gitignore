@@ -117,5 +117,5 @@ test_results.txt
 # MacOS
 .DS_Store
 
-blocksworld.code-workspace
+blocksworld3d.code-workspace
 blocksworld/main.py

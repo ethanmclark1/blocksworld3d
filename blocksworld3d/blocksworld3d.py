@@ -2,12 +2,12 @@ import math
 import numpy as np
 
 from gymnasium import utils
-from blocksworld.utils.entity import Block
-from blocksworld.utils.core import MiniWorldEnv
-from blocksworld.utils.problems import get_problem_instance
+from blocksworld3d.utils.entity import Block
+from blocksworld3d.utils.core import MiniWorldEnv
+from blocksworld3d.utils.problems import get_problem_instance
 
 
-class BlocksWorld(MiniWorldEnv, utils.EzPickle):
+class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
     BLOCK_SIZE = 0.6
 
     def __init__(self, size=6, **kwargs):

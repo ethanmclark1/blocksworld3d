@@ -1,27 +1,22 @@
-import math
 import pyglet
 import numpy as np
+import gymnasium as gym
 
 from pyglet.window import key
-from utils.problems import get_num_problems
+from blocksworld3d.utils.problems import get_num_problems
 
 
 class ManualControl:
-    def __init__(self, env, no_time_limit, domain_rand):
+    def __init__(self, env):
         self.env = env
         num_probs = get_num_problems()
         self.problem_id = np.random.choice(num_probs)
-
-        if no_time_limit:
-            self.env.max_episode_steps = math.inf
-        if domain_rand:
-            self.env.domain_rand = True
 
     def run(self):
         print("============")
         print("Instructions")
         print("============")
-        print("move: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
+        print("turn: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
         print("============")
 
         self.env.reset(options={'problem_id': self.problem_id})
@@ -55,6 +50,8 @@ class ManualControl:
                 self.step(self.env.actions.turn_left)
             elif symbol == key.RIGHT:
                 self.step(self.env.actions.turn_right)
+            elif symbol == key.SPACE:
+                self.step(self.env.actions.toggle_row)
             elif symbol == key.ENTER:
                 self.step(self.env.actions.done)
 
@@ -94,3 +91,7 @@ class ManualControl:
             self.env.reset(options={'problem_id': self.problem_id})
 
         self.env.render()
+
+env = gym.make("BlocksWorld-v0", view="agent", render_mode="human")
+manual_control = ManualControl(env)
+manual_control.run()

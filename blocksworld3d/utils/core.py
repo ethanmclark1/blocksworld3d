@@ -67,10 +67,10 @@ from pyglet.gl import (
     glVertex3f,
 )
 
-from blocksworld.utils.entity import Agent, Entity
-from blocksworld.utils.math import Y_VEC, intersect_circle_segs
-from blocksworld.utils.opengl import FrameBuffer, Texture, drawBox
-from blocksworld.utils.params import DEFAULT_PARAMS
+from blocksworld3d.utils.entity import Agent, Entity
+from blocksworld3d.utils.math import Y_VEC, intersect_circle_segs
+from blocksworld3d.utils.opengl import FrameBuffer, Texture, drawBox
+from blocksworld3d.utils.params import DEFAULT_PARAMS
 
 # Default wall height for room
 DEFAULT_WALL_HEIGHT = 8
