@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="blocksworld3d",
-    version="0.1.3",
+    version="0.1.4",
     author="Ethan Clark",
     author_email="eclark715@gmail.com",
     description="Minimalistic 3D blocksworld environment simulator for reinforcement learning & robotics research.",
@@ -23,7 +23,7 @@ setup(
     ],
     include_package_data=True,
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
