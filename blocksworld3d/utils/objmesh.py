@@ -4,8 +4,8 @@ import numpy as np
 import pyglet
 from pyglet.gl import GL_TEXTURE_2D, GL_TRIANGLES, glBindTexture, glDisable, glEnable
 
-from blocksworld3d.utils.opengl import Texture
-from blocksworld3d.utils.utils import get_file_path
+from utils.opengl import Texture
+from utils.utils import get_file_path
 
 
 class ObjMesh:
