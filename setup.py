@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="blocksworld3d",
-    version="0.1.9",
+    version="0.2.0",
     author="Ethan Clark",
     author_email="eclark715@gmail.com",
     description="Minimalistic 3D blocksworld environment simulator for reinforcement learning & robotics research.",
@@ -14,7 +14,7 @@ setup(
     keywords=["Environment", "Agent", "RL", "Gym", "Robotics", "3D"],
     python_requires=">=3.7, <3.11",
     packages=find_packages(),
-    package_data={"blocksworld3d": ["textures/*.png",]},
+    package_data={"blocksworld3d": ["utils/textures/*.png",]},
     extras_require={"testing": ["pytest==7.0.1", "torch"]},
     install_requires=[
         "numpy>=1.18.0",
