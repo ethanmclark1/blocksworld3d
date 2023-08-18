@@ -1,8 +1,11 @@
 import gymnasium as gym
 from blocksworld3d.blocksworld3d import BlocksWorld3D
+from blocksworld3d.utils.problems import get_num_problems, get_problem_instance
 
 __all__ = [
     "BlocksWorld3D",
+    "get_num_problems",
+    "get_problem_instance",
 ]
 
 gym.register(

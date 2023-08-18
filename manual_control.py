@@ -1,15 +1,14 @@
 import pyglet
 import numpy as np
-import gymnasium as gym
+import blocksworld3d
 
 from pyglet.window import key
-from blocksworld3d.utils.problems import get_num_problems
 
 
 class ManualControl:
     def __init__(self, env):
         self.env = env
-        num_probs = get_num_problems()
+        num_probs = blocksworld3d.get_num_problems()
         self.problem_id = np.random.choice(num_probs)
 
     def run(self):
@@ -92,6 +91,6 @@ class ManualControl:
 
         self.env.render()
 
-env = gym.make("BlocksWorld-v0", view="agent", render_mode="human")
+env = blocksworld3d.env(render_mode='human')
 manual_control = ManualControl(env)
 manual_control.run()
