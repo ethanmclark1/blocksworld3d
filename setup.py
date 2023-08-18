@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="blocksworld3d",
-    version="0.1.5",
+    version="0.1.6",
     author="Ethan Clark",
     author_email="eclark715@gmail.com",
     description="Minimalistic 3D blocksworld environment simulator for reinforcement learning & robotics research.",

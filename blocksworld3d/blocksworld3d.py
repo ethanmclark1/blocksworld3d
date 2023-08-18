@@ -2,9 +2,9 @@ import math
 import numpy as np
 
 from gymnasium import utils
-from blocksworld3d.utils.entity import Block
-from blocksworld3d.utils.core import MiniWorldEnv
-from blocksworld3d.utils.problems import get_problem_instance
+from .utils.entity import Block
+from .utils.core import MiniWorldEnv
+from .utils.problems import get_problem_instance
 
 
 class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
