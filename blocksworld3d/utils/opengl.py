@@ -80,7 +80,7 @@ from pyglet.gl import (
     glViewport,
 )
 
-from utils.utils import get_file_path
+from .utils import get_file_path
 
 if os.environ.get("PYOPENGL_PLATFORM", None) == "egl":
     pyglet.options["headless"] = True

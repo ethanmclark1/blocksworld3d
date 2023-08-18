@@ -28,9 +28,9 @@ from pyglet.gl import (
     glVertex3f,
 )
 
-from utils.math import X_VEC, Y_VEC, Z_VEC, gen_rot_matrix
-from utils.objmesh import ObjMesh
-from utils.opengl import Texture, drawBox
+from .math import X_VEC, Y_VEC, Z_VEC, gen_rot_matrix
+from .objmesh import ObjMesh
+from .opengl import Texture, drawBox
 
 COLORS = {
     "red": np.array([1.0, 0.0, 0.0]),
