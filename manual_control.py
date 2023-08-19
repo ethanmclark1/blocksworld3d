@@ -8,8 +8,6 @@ from pyglet.window import key
 class ManualControl:
     def __init__(self, env):
         self.env = env
-        num_probs = blocksworld3d.get_num_problems()
-        self.problem_id = np.random.choice(num_probs)
 
     def run(self):
         print("============")
@@ -18,7 +16,8 @@ class ManualControl:
         print("turn: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
         print("============")
 
-        self.env.reset(options={'problem_id': self.problem_id})
+        self.problem_instance = np.random.choice(blocksworld3d.get_problem_list())
+        self.env.reset(options={'problem_instance': self.problem_instance})
 
         # Create the display window
         self.env.render()
@@ -34,7 +33,7 @@ class ManualControl:
 
             if symbol == key.BACKSPACE or symbol == key.SLASH:
                 print("RESET")
-                self.env.reset(options={'problem_id': self.problem_id})
+                self.env.reset(options={'problem_instance': self.problem_instance})
                 self.env.render()
                 return
 
@@ -81,13 +80,12 @@ class ManualControl:
         )
 
         obs, reward, termination, truncation, info = self.env.step(action)
-
-        if reward > 0:
-            print(f"reward={reward:.2f}")
+        
+        print(f"reward={reward:.2f}")
 
         if termination or truncation:
             print("done!")
-            self.env.reset(options={'problem_id': self.problem_id})
+            self.env.reset(options={'problem_instance': self.problem_instance})
 
         self.env.render()
 

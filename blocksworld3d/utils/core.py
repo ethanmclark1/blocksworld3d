@@ -538,7 +538,7 @@ class MiniWorldEnv(gym.Env):
         )
 
         # Initialize the state
-        self.reset(options={'problem_id': 0})
+        self.reset(options={'problem_instance': 'gap'})
 
     def reset(
         self, *, seed: Optional[int] = None, options: Optional[dict] = None
@@ -568,9 +568,9 @@ class MiniWorldEnv(gym.Env):
         # Generate the world
         if options is None:
             options = {}
-            options['problem_id'] = 0
+            options['problem_instance'] = 'gap'
             
-        self._gen_world(options['problem_id'])
+        self._gen_world(options['problem_instance'])
 
         # Check if domain randomization is enabled or not
         rand = self.np_random if self.domain_rand else None
@@ -676,14 +676,15 @@ class MiniWorldEnv(gym.Env):
             test_pos = self.agent.pos
             dir_vec = self.agent.dir_vec
             current_row_blocks = self._get_blocks_in_row()
-            sorted_blocks = self._get_center_block(test_pos, dir_vec, current_row_blocks)
+            current_stack_blocks = self._get_blocks_in_stack(test_pos, dir_vec, current_row_blocks)
             
             # Iterate through the sorted list of usable blocks and pick up the first suitable one
-            for closest_block in sorted_blocks:
+            for closest_block in current_stack_blocks:
                 if not self.agent.carrying:
                     if isinstance(closest_block, Entity) and closest_block.is_beneath is None:
                         self.agent.carrying = closest_block
-                        self.update_representation(closest_block)
+                        loc = int(closest_block.pos[2] - 1)
+                        self.update_representation(closest_block, loc, action.name)
                         if closest_block.is_above:
                             bottom_block = closest_block.is_above
                             bottom_block.is_beneath = None
@@ -699,32 +700,34 @@ class MiniWorldEnv(gym.Env):
                 test_pos = self.agent.pos
                 dir_vec = self.agent.dir_vec
                 current_row_blocks = self._get_blocks_in_row()
-                sorted_blocks = self._get_center_block(test_pos, dir_vec, current_row_blocks)
-
-                # Iterate through the sorted blocks to find the first suitable target block
-                for target_block in sorted_blocks:
-                    if current_block != target_block and target_block.is_beneath is None:
-                        new_pos = np.array(target_block.pos, dtype=np.float32)
-                        new_pos[1] = target_block.pos[1] + target_block.height
-                        new_dir = target_block.dir
-                        target_block.is_beneath = current_block
-                        current_block.is_above = target_block
-                        loc = int(target_block.pos[2] - 1)
-                        break
-                else:
-                    # If no suitable target block found, place the carried blocks at a default position
-                    closest_spot = min(self.spots[self.cur_row], key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
-                    new_pos = closest_spot
-                    loc = closest_spot[2] - 1
-                    new_dir = 0
+                current_stack_blocks = self._get_blocks_in_stack(test_pos, dir_vec, current_row_blocks)
                 
-                # Update the position and direction of the carried blocks and release it
-                self.agent.carrying.pos = new_pos
-                self.agent.carrying.dir = new_dir
-                self.agent.carrying = None
-                
-                # Update the interal representation of the blocks
-                self.update_representation(current_block, loc)
+                # Limit to 6 blocks per stack
+                if len(current_stack_blocks) < 5:
+                    # Iterate through the sorted blocks to find the first suitable target block
+                    for target_block in current_stack_blocks:
+                        if current_block != target_block and target_block.is_beneath is None:
+                            new_pos = np.array(target_block.pos, dtype=np.float32)
+                            new_pos[1] = target_block.pos[1] + target_block.height
+                            new_dir = target_block.dir
+                            target_block.is_beneath = current_block
+                            current_block.is_above = target_block
+                            loc = int(target_block.pos[2] - 1)
+                            break
+                    else:
+                        # If no suitable target block found, place the carried blocks at a default position
+                        closest_spot = min(self.spots[self.cur_row], key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
+                        new_pos = closest_spot
+                        loc = int(closest_spot[2] - 1)
+                        new_dir = 0
+                    
+                    # Update the position and direction of the carried blocks and release it
+                    self.agent.carrying.pos = new_pos
+                    self.agent.carrying.dir = new_dir
+                    self.agent.carrying = None
+                    
+                    # Update the interal representation of the blocks
+                    self.update_representation(current_block, loc, action.name)
                 
         elif action == self.actions.toggle_row:
             self.cur_row = not self.cur_row
@@ -1017,16 +1020,16 @@ class MiniWorldEnv(gym.Env):
         return tmin
     
     # Gets the closest blocks in the linesight
-    def _get_center_block(self, ray_origin, ray_dir, current_row_blocks):
-        sorted_blocks = []
+    def _get_blocks_in_stack(self, ray_origin, ray_dir, current_row_blocks):
+        current_stack_blocks = []
 
         for blocks in current_row_blocks:
             t = self.intersect_ray_block(ray_origin, ray_dir, blocks)
             if t is not None:
-                sorted_blocks.append((t, blocks))
+                current_stack_blocks.append((t, blocks))
 
-        sorted_blocks.sort(key=lambda x: x[0])
-        return [blocks for _, blocks in sorted_blocks]
+        current_stack_blocks.sort(key=lambda x: x[0])
+        return [blocks for _, blocks in current_stack_blocks]
 
     def _load_tex(self, tex_name):
         """

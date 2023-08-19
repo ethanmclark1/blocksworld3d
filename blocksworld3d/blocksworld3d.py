@@ -8,7 +8,7 @@ from .utils.problems import get_problem_instance
 
 
 class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
-    BLOCK_SIZE = 0.6
+    BLOCK_SIZE = 0.4
 
     def __init__(self, size=6, **kwargs):
         self.size = size
@@ -20,11 +20,11 @@ class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
         MiniWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
         utils.EzPickle.__init__(self, size, **kwargs)
         
-    def _gen_world(self, problem_id):
+    def _gen_world(self, problem_instance):
         """Generate the world based on the problem ID."""
         self._create_room()
         self._place_agent()
-        self.blocks, self.state, self.goal = self._gen_blocks(problem_id)
+        self.blocks, self.state, self.goal = self._gen_blocks(problem_instance)
 
     def _create_room(self):
         """Add room with specific boundaries and textures."""
@@ -44,17 +44,17 @@ class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
         dir = np.random.choice((-1, 1)) * 30 * math.pi / 180
         self.place_agent(cam_height=0, pos=(1, 0, 3), dir=dir)
 
-    def _gen_blocks(self, problem_id):
-        """Generate blocks based on the problem ID."""
-        start, goal = get_problem_instance(problem_id)
+    def _gen_blocks(self, problem_instance):
+        """Generate blocks based on the problem instance."""
         blocks = []
+        start, goal = get_problem_instance(problem_instance)
         
         for row_idx, row in enumerate(start):
             for stack_idx, stack in enumerate(row):
-                if len(stack) > 0:
+                if stack != 0:
                     prev_block = None
-                    for block_idx, block in enumerate(stack):
-                        block = Block(color=block, size=self.BLOCK_SIZE)
+                    for block_idx in range(stack):
+                        block = Block(color='blue', size=self.BLOCK_SIZE)
                         pos = self.spots[row_idx][stack_idx] + np.array((0, block_idx * self.BLOCK_SIZE, 0))
                         self.place_entity(block, pos=pos, dir=0)
 
@@ -72,21 +72,18 @@ class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
         obs, reward, termination, truncation, info = super().step(action)
         
         if self.state == self.goal:
-            reward = 5
+            reward = 10
             termination = True
         
         reward = -0.1 if reward == 0 else reward
                 
         return obs, reward, termination, truncation, info
     
-    def update_representation(self, block, loc=None):
+    def update_representation(self, block, loc, action):
         """Update the internal representation of the blocksworld state."""
-        if loc is None:
+        if action is 'pickup':
             # Remove block from state during pickup action
-            for idx, stack in enumerate(self.state):
-                if block.color in stack:
-                    self.state[idx].remove(block.color)
-                    break
+            self.state[self.cur_row][loc] -= 1
         else:
             # Add block to state during drop action
-            self.state[self.cur_row][loc].append(block.color)
+            self.state[self.cur_row][loc] += 1

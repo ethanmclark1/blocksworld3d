@@ -1,89 +1,92 @@
+import copy
+
 problems = {
-    '0': {
+    'gap': {
         'start': [
-            [['red'], ['green', 'blue'], [], ['purple'], ['yellow', 'red']],
-            [['blue'], ['green'], ['blue'], ['red'], ['purple']]
-        ],
+            [3, 0, 3, 0, 3],
+            [0, 1, 0, 1, 0]
+            ],
         'goal': [
-            [['blue'], ['red', 'green'], ['purple'], ['yellow'], ['red']],
-            [['red'], ['green'], ['blue', 'purple'], ['purple'], ['yellow', 'blue']]
-        ]
+            [0, 2, 0, 2, 0],
+            [2, 0, 3, 0, 2]
+            ]
     },
-    '1': {
+    'balance': {
         'start': [
-            [['red', 'yellow'], ['green'], ['blue', 'purple'], ['purple'], []],
-            [['yellow'], ['red'], ['green'], ['blue'], ['purple', 'red']]
-        ],
+            [1, 3, 0, 2, 2],
+            [2, 1, 1, 0, 2]
+            ],
         'goal': [
-            [['purple', 'red'], ['yellow'], ['green'], ['red'], ['blue']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'blue']]
-        ]
+            [2, 1, 1, 1, 2],
+            [2, 1, 1, 1, 2]
+            ]
     },
-    '2': {
+    'exchange': {
         'start': [
-            [['red'], ['green'], ['blue', 'yellow'], ['purple'], ['yellow']],
-            [['green'], ['blue'], ['purple'], ['yellow'], ['red', 'purple']]
-        ],
+            [2, 1, 2, 1, 2],
+            [1, 0, 1, 0, 1]
+            ],
         'goal': [
-            [['blue'], ['purple'], ['yellow'], ['red'], ['green', 'blue']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'red']]
-        ]
+            [1, 0, 1, 0, 1],
+            [2, 1, 2, 1, 2]
+            ]
     },
-    '3': {
+    'stairs': {
         'start': [
-            [['red'], ['green', 'blue'], ['blue'], ['purple'], ['yellow', 'red']],
-            [['green'], ['blue'], ['purple', 'yellow'], ['yellow'], ['red']]
-        ],
+            [1, 2, 3, 2, 1],
+            [0, 1, 1, 1, 0]
+            ],
         'goal': [
-            [['yellow', 'red'], ['red'], ['green'], ['blue'], ['purple']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'blue']]
-        ]
+            [0, 0, 1, 0, 0],
+            [3, 2, 1, 2, 3]
+            ]
     },
-    '4': {
+    'bed': {
         'start': [
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow']],
-            [['blue'], ['purple'], ['red', 'yellow'], ['red'], ['green']]
-        ],
+            [4, 2, 2, 0, 4],
+            [3, 2, 1, 2, 0]
+            ],
         'goal': [
-            [['green'], ['blue'], ['purple'], ['yellow'], ['red', 'blue']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'red']]
-        ]
+            [2, 2, 2, 2, 2],
+            [2, 2, 2, 2, 2]
+            ]
     },
-    '5': {
+    'towers': {
         'start': [
-            [['red'], ['green'], ['blue'], ['purple', 'yellow'], ['yellow']],
-            [['green'], ['blue'], ['purple'], ['yellow'], ['red', 'green']]
-        ],
+            [4, 0, 4, 0, 4],
+            [0, 1, 1, 1, 0]
+            ],
         'goal': [
-            [['red'], ['purple'], ['yellow'], ['green'], ['blue', 'red']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'blue']]
-        ]
+            [0, 0, 0, 0, 0],
+            [3, 3, 3, 3, 3]
+            ]
     },
-    '6': {
+    'foldable': {
         'start': [
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'red']],
-            [['green'], ['blue'], ['purple'], ['yellow'], ['red']]
-        ],
+            [1, 2, 3, 2, 1],
+            [2, 0, 3, 0, 2]
+            ],
         'goal': [
-            [['blue'], ['yellow'], ['red'], ['green'], ['purple', 'red']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'blue']]
-        ]
+            [2, 1, 2, 1, 2],
+            [2, 1, 2, 1, 2]
+            ]
     },
-    '7': {
+    'wave': {
         'start': [
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow']],
-            [['green'], ['blue'], ['purple'], ['yellow', 'red'], ['red']]
-        ],
+            [3, 2, 3, 3, 3],
+            [3, 0, 1, 2, 0]
+            ],
         'goal': [
-            [['purple'], ['yellow'], ['red'], ['green'], ['blue']],
-            [['red'], ['green'], ['blue'], ['purple'], ['yellow', 'red']]
-        ]
+            [4, 3, 2, 1, 0], 
+            [4, 3, 2, 1, 0]
+            ]
     }
 }
 
+def get_problem_list():
+    return list(problems.keys())
 
-def get_num_problems():
-    return len(problems)
-
-def get_problem_instance(problem_id):
-    return problems[str(problem_id)]['start'], problems[str(problem_id)]['goal']
+def get_problem_instance(problem_instance):
+    start = copy.deepcopy(problems[problem_instance]['start'])
+    goal = copy.deepcopy(problems[problem_instance]['goal'])
+    return start, goal
