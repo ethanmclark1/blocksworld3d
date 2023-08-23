@@ -119,3 +119,4 @@ test_results.txt
 
 blocksworld3d.code-workspace
 blocksworld/main.py
+manual_control.py
