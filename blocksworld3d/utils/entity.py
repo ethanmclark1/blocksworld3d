@@ -472,14 +472,16 @@ class Agent(Entity):
         super().__init__()
 
         # Distance between the camera and the floor
-        self.cam_height = 5
+        self.cam_height = 7.5
 
         # Camera up/down angles in degrees
         # Positive angles tilt the camera upwards
-        self.cam_pitch = -30
+        self.cam_pitch = -60
 
         # Vertical field of view in degrees
         self.cam_fov_y = 60
+        
+        self.cam_fwd_disp = 0
 
         # Bounding cylinder size for the agent
         self.radius = 0.4
@@ -518,16 +520,7 @@ class Agent(Entity):
         return dir
 
     def randomize(self, params, rng):
-        params.sample_many(
-            rng,
-            self,
-            [
-                "cam_height",
-                "cam_fwd_disp",
-                "cam_pitch",
-                "cam_fov_y",
-            ],
-        )
+        pass
 
     def step(self, delta_time):
         pass

@@ -13,11 +13,11 @@ class ManualControl:
         print("============")
         print("Instructions")
         print("============")
-        print("turn: arrow keys\npickup: P\ndrop: D\ndone: ENTER\nquit: ESC")
+        print("move: arrow keys\npickup: P\ndrop: D\ntoggle row: SPACE\ndone: ENTER\nquit: ESC")
         print("============")
 
         self.problem_instance = np.random.choice(blocksworld3d.get_problem_list())
-        self.env.reset(options={'problem_instance': self.problem_instance})
+        obs, _ = self.env.reset(options={'problem_instance': self.problem_instance})
 
         # Create the display window
         self.env.render()
@@ -45,9 +45,9 @@ class ManualControl:
             elif symbol == key.DOWN:
                 self.step(self.env.actions.drop)
             elif symbol == key.LEFT:
-                self.step(self.env.actions.turn_left)
+                self.step(self.env.actions.move_left)
             elif symbol == key.RIGHT:
-                self.step(self.env.actions.turn_right)
+                self.step(self.env.actions.move_right)
             elif symbol == key.SPACE:
                 self.step(self.env.actions.toggle_row)
             elif symbol == key.ENTER:

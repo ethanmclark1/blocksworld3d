@@ -78,9 +78,6 @@ DEFAULT_WALL_HEIGHT = 8
 # Texture size/density in texels/meter
 TEX_DENSITY = 512
 
-MIN_TURN_ANGLE = -45
-MAX_TURN_ANGLE = 45
-
 
 def gen_texcs_wall(tex, min_x, min_y, width, height):
     """
@@ -453,8 +450,8 @@ class MiniWorldEnv(gym.Env):
     # Enumeration of possible actions
     class Actions(IntEnum):
         # Turn left or right by a small amount
-        turn_left = 0
-        turn_right = 1
+        move_left = 0
+        move_right = 1
 
         # Pick up or drop an object being carried
         pickup = 2
@@ -576,12 +573,8 @@ class MiniWorldEnv(gym.Env):
         rand = self.np_random if self.domain_rand else None
 
         # Randomize elements of the world (domain randomization)
-        self.params.sample_many(
-            rand, self, ["sky_color", "light_pos", "light_color", "light_ambient"]
-        )
+        self.params.sample_many(rand, self, ["sky_color", "light_pos", "light_color", "light_ambient"])
 
-        # Get the max forward step distance
-        self.max_forward_step = self.params.get_max("forward_step")
 
         # Randomize parameters of the entities
         for ent in self.entities:
@@ -611,7 +604,7 @@ class MiniWorldEnv(gym.Env):
         Compute the position at which to place an object being carried
         """
 
-        dist = self.agent.radius + ent.radius + self.max_forward_step
+        dist = self.agent.radius + ent.radius
         pos = agent_pos + self.agent.dir_vec * 1.05 * dist
 
         # Adjust the Y-position so the object is visible while being carried
@@ -622,37 +615,32 @@ class MiniWorldEnv(gym.Env):
     
     def _get_blocks_in_row(self):
         """"Return list of blocks in current row"""
-        blocks_in_row = [block for block in self.blocks if block.pos[0] - 4 == self.cur_row]
+        blocks_in_row = [block for block in self.blocks if block.pos[0] % 2 == self.cur_row]
         return blocks_in_row
-
-    def turn_agent(self, turn_angle):
+    
+    def move_agent(self, lateral_dir):
         """
-        Turn agent left or right according to previous action
-        Agent must move left-to-right or right-to-left all the way before switching directions
+        Move the agent laterally
         """
-
-        turn_angle *= math.pi / 180
-        orig_dir = self.agent.dir
-        new_dir = orig_dir + turn_angle
         
-        if MIN_TURN_ANGLE * math.pi / 180 < new_dir < MAX_TURN_ANGLE * math.pi / 180:
-            angle = round(self.agent.dir * 180 / math.pi)
-            if np.sign(turn_angle) == self.prev_dir or np.abs(angle) == 30:
-                self.agent.dir = new_dir
-                self.prev_dir = np.sign(turn_angle)
+        movement = (0, 0, lateral_dir)
+        next_pos = tuple(a + b for a, b in zip(self.agent.pos, movement))
+        
+        if next_pos[2] != 1 and next_pos[2] != 7:
+            if self.prev_move == lateral_dir or self.agent.pos[2] == 2 or self.agent.pos[2] == 6:
+                self.agent.pos = next_pos
+                self.prev_move = lateral_dir
         else:
-            return False
+            return False      
 
         carrying = self.agent.carrying
         if carrying:
-            pos = self._get_carry_pos(self.agent.pos, carrying)
+            next_carrying_pos = self._get_carry_pos(next_pos, carrying)
 
-            if self.intersect(carrying, pos, carrying.radius):
-                self.agent.dir = orig_dir
+            if self.intersect(carrying, next_carrying_pos, carrying.radius):
                 return False
 
-            carrying.pos = pos
-            carrying.dir = self.agent.dir
+            carrying.pos = next_carrying_pos
 
         return True
 
@@ -663,14 +651,11 @@ class MiniWorldEnv(gym.Env):
 
         self.step_count += 1
 
-        rand = self.np_random if self.domain_rand else None
-        turn_step = self.params.sample(rand, "turn_step")
+        if action == self.actions.move_left:
+            self.move_agent(-1)
 
-        if action == self.actions.turn_left:
-            self.turn_agent(turn_step)
-
-        elif action == self.actions.turn_right:
-            self.turn_agent(-turn_step)
+        elif action == self.actions.move_right:
+            self.move_agent(1)
 
         elif action == self.actions.pickup:
             test_pos = self.agent.pos
@@ -683,8 +668,8 @@ class MiniWorldEnv(gym.Env):
                 if not self.agent.carrying:
                     if isinstance(closest_block, Entity) and closest_block.is_beneath is None:
                         self.agent.carrying = closest_block
-                        loc = int(closest_block.pos[2] - 1)
-                        self.update_representation(closest_block, loc, action.name)
+                        loc = int(closest_block.pos[2] - 2)
+                        self.update_representation(loc, action.name)
                         if closest_block.is_above:
                             bottom_block = closest_block.is_above
                             bottom_block.is_beneath = None
@@ -702,7 +687,7 @@ class MiniWorldEnv(gym.Env):
                 current_row_blocks = self._get_blocks_in_row()
                 current_stack_blocks = self._get_blocks_in_stack(test_pos, dir_vec, current_row_blocks)
                 
-                # Limit to 6 blocks per stack
+                # Limit to 5 blocks per stack
                 if len(current_stack_blocks) < 5:
                     # Iterate through the sorted blocks to find the first suitable target block
                     for target_block in current_stack_blocks:
@@ -712,13 +697,13 @@ class MiniWorldEnv(gym.Env):
                             new_dir = target_block.dir
                             target_block.is_beneath = current_block
                             current_block.is_above = target_block
-                            loc = int(target_block.pos[2] - 1)
+                            loc = int(target_block.pos[2] - 2)
                             break
                     else:
                         # If no suitable target block found, place the carried blocks at a default position
                         closest_spot = min(self.spots[self.cur_row], key=lambda spot: np.linalg.norm(np.cross(dir_vec, spot - test_pos)))
                         new_pos = closest_spot
-                        loc = int(closest_spot[2] - 1)
+                        loc = int(closest_spot[2] - 2)
                         new_dir = 0
                     
                     # Update the position and direction of the carried blocks and release it
@@ -727,7 +712,7 @@ class MiniWorldEnv(gym.Env):
                     self.agent.carrying = None
                     
                     # Update the interal representation of the blocks
-                    self.update_representation(current_block, loc, action.name)
+                    self.update_representation(loc, action.name)
                 
         elif action == self.actions.toggle_row:
             self.cur_row = not self.cur_row
@@ -1133,7 +1118,7 @@ class MiniWorldEnv(gym.Env):
         # Render the non-static entities
         for ent in sorted_entities:
             if not ent.is_static and ent is not self.agent:
-                opacity = 1 if ent.pos[0] - 4 == self.cur_row or self.agent.carrying == ent else 0.35
+                opacity = 1 if ent.pos[0] % 2 == self.cur_row or self.agent.carrying == ent else 0.35
                 ent.render(opacity)
                 # ent.draw_bound()
 

@@ -8,18 +8,18 @@ from .utils.problems import get_problem_instance
 
 
 class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
-    BLOCK_SIZE = 0.4
+    BLOCK_SIZE = 0.8
 
-    def __init__(self, size=6, **kwargs):
+    def __init__(self, size=8, **kwargs):
         self.size = size
         self.cur_row = 0
-        self.prev_dir = None
-        self.spots = [[np.array((4, 0, z)) for z in range(1, self.size)],
-                      [np.array((5, 0, z)) for z in range(1, self.size)]]
+        self.prev_move = None
+        self.spots = [[np.array((4, 0, z)) for z in range(2, self.size - 1)],
+                      [np.array((7, 0, z)) for z in range(2, self.size - 1)]]
         
         MiniWorldEnv.__init__(self, max_episode_steps=100, **kwargs)
         utils.EzPickle.__init__(self, size, **kwargs)
-        
+    
     def _gen_world(self, problem_instance):
         """Generate the world based on the problem ID."""
         self._create_room()
@@ -41,8 +41,8 @@ class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
     def _place_agent(self):
         """Place the agent in the world."""
         self.agent.radius = 1
-        dir = np.random.choice((-1, 1)) * 30 * math.pi / 180
-        self.place_agent(cam_height=0, pos=(1, 0, 3), dir=dir)
+        loc = np.random.choice((2, self.size-2))
+        self.place_agent(pos=(2, 0, loc), dir=0)
 
     def _gen_blocks(self, problem_instance):
         """Generate blocks based on the problem instance."""
@@ -79,7 +79,7 @@ class BlocksWorld3D(MiniWorldEnv, utils.EzPickle):
                 
         return obs, reward, termination, truncation, info
     
-    def update_representation(self, block, loc, action):
+    def update_representation(self, loc, action):
         """Update the internal representation of the blocksworld state."""
         if action is 'pickup':
             # Remove block from state during pickup action
