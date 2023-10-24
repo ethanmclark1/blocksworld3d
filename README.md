@@ -4,7 +4,7 @@ Blocksworld3D, building upon the MiniWorld environment, specifically targets the
 
 # Blocksworld3D
 
-Blocksworld3D extends the traditional BlocksWorld planning problem to a 3D domain, adding extra rows of blocks. It presents four problem instances, each with unique constraints on initial block positioning and final objectives.
+Blocksworld3D extends the traditional BlocksWorld planning problem to a 3D domain, adding extra rows of blocks. It presents eight problem instances, each with unique constraints on initial block positioning and final objectives.
 
 ## Installation
 
