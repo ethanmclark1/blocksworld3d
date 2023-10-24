@@ -35,18 +35,20 @@ env.close()
 
 ## List of Problem Instances
 
-| Problem Instance | Visualization                                                  |
-| ---------------- | -------------------------------------------------------------- |
-| `stacking`     | ![stacking](https://chat.openai.com/image/README/stacking.png)   |
-| `sorting`      | ![sorting](https://chat.openai.com/image/README/sorting.png)     |
-| `arranging`    | ![arranging](https://chat.openai.com/image/README/arranging.png) |
-| ...              | ...                                                            |
-
-> **Note** : Customize the table above with the specific problem instances and visualization images relevant to your project.
+| Problem Instance |
+| ---------------- |
+| ``gap``          |
+| ``balance``      |
+| ``stairs``       |
+| ``pyramid``      |
+| ``bed``          |
+| ``towers``       |
+| ``wave-v0``      |
+| ``wave-v1``      |
 
 ## Contributing
 
-We welcome contributions to blocksworld3d! Whether it's bug reports, feature requests, or pull requests, your collaboration helps make blocksworld3d better.
+We welcome contributions to Blocksworld3d! Whether it's bug reports, feature requests, or pull requests, your collaboration helps make Blocksworld3d better.
 
 ## Support
 
@@ -54,7 +56,7 @@ If you have questions or need support, please contact us at [eclark715@gmail.com
 
 ## License
 
-blocksworld3d is open-source software licensed under the [MIT license](https://chat.openai.com/LINK_TO_YOUR_LICENSE).
+Blocksworld3d is open-source software licensed under the [MIT license](https://chat.openai.com/LINK_TO_YOUR_LICENSE).
 
 ## Paper Citation
 
