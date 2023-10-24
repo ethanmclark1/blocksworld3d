@@ -1,12 +1,10 @@
 # An Extension of MiniWorld
 
-blocksworld3d is an enhancement on top of the MiniWorld environment, specifically focusing on the RoomObjects scenario. It's an open-source research project aimed at advancing the development of spatial reasoning and manipulation strategies in robotic systems.
+Blocksworld3D, building upon the MiniWorld environment, specifically targets the RoomObjects scenario. Designed for reinforcement learning and robotics research, this minimalistic environment aligns with the MiniWorld API.
 
 # Blocksworld3D
 
-blocksworld3d proposes a unique 3D environment that simulates the classic blocksworld problem except with an additional row of blocks. With various problem instances introducing different constraints on block positioning, start points, goals, and obstacles, this dynamic aspect fosters the exploration of spatial strategies in diverse settings.
-
-The environment is minimalistic and designed for reinforcement learning & robotics research. It's compatible with the MiniWorld API, providing a seamless integration with existing toolsets.
+Blocksworld3D extends the traditional BlocksWorld planning problem to a 3D domain, adding extra rows of blocks. It presents four problem instances, each with unique constraints on initial block positioning and final objectives.
 
 ## Installation
 
