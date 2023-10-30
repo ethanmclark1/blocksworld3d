@@ -27,7 +27,7 @@ pip install -e .
 import blocksworld3d
 
 env = blocksworld3d.env()
-env.reset(options={'problem_instance': 'stacking'}))
+env.reset(options={'problem_instance': 'gap'}))
 observation, _, terminations, truncations, _ = env.last()
 env.step(action)
 env.close()
